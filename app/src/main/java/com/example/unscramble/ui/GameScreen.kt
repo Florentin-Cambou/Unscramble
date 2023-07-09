@@ -52,12 +52,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.unscramble.R
 import com.example.unscramble.ui.theme.UnscrambleTheme
 
 @Composable
-fun GameScreen() {
+fun GameScreen(
+    gameViewModel: GameViewModel = viewModel()
+) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
+    val gameUiState  by gameViewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -76,7 +80,12 @@ fun GameScreen() {
             modifier = Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .padding(mediumPadding)
+                .padding(mediumPadding),
+            currentScrambleWord = gameUiState.currentScrambleWord,
+            onUserGuessChanged = { gameViewModel.updateUserGuess(it) },
+            onKeyboardDone = { gameViewModel.checkUserGuess() },
+            userGuess = gameViewModel.userGuess,
+            isGuessedWordWrong = gameUiState.isGuessedWordWrong
         )
         Column(
             modifier = Modifier
@@ -88,7 +97,7 @@ fun GameScreen() {
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                onClick = { }
+                onClick = { gameViewModel.checkUserGuess() }
             ) {
                 Text(
                     text = stringResource(R.string.submit),
@@ -125,8 +134,16 @@ fun GameStatus(score: Int, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun GameLayout(modifier: Modifier = Modifier) {
+fun GameLayout(
+    modifier: Modifier = Modifier,
+    currentScrambleWord: String,
+    onUserGuessChanged: (String) -> Unit,
+    onKeyboardDone: () -> Unit,
+    userGuess: String,
+    isGuessedWordWrong: Boolean
+) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
+
 
     Card(
         modifier = modifier,
@@ -148,7 +165,7 @@ fun GameLayout(modifier: Modifier = Modifier) {
                 color = colorScheme.onPrimary
             )
             Text(
-                text = "scrambleun",
+                text = currentScrambleWord,
                 style = typography.displayMedium
             )
             Text(
@@ -157,19 +174,22 @@ fun GameLayout(modifier: Modifier = Modifier) {
                 style = typography.titleMedium
             )
             OutlinedTextField(
-                value = "",
+                value = userGuess,
                 singleLine = true,
                 shape = shapes.large,
                 modifier = Modifier.fillMaxWidth(),
                 colors = TextFieldDefaults.textFieldColors(containerColor = colorScheme.surface),
-                onValueChange = { },
-                label = { Text(stringResource(R.string.enter_your_word)) },
-                isError = false,
+                onValueChange = onUserGuessChanged,
+                label = {
+                            if (!isGuessedWordWrong) Text(stringResource(R.string.enter_your_word))
+                            else Text(stringResource(R.string.wrong_guess))
+                        },
+                isError = isGuessedWordWrong,
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
-                    onDone = { }
+                    onDone = { onKeyboardDone()}
                 )
             )
         }
