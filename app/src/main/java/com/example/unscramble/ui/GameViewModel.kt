@@ -1,10 +1,12 @@
 // class qui gère le view model ce qui est affiché en direct à l'utilisateur
 package com.example.unscramble.ui
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.unscramble.data.MAX_NO_OF_WORDS
 import com.example.unscramble.data.SCORE_INCREASE
 import com.example.unscramble.data.allWords
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,12 +67,30 @@ class GameViewModel: ViewModel() {
         updateUserGuess("")
     }
     fun updateGameState(updateScore: Int) {
+        if(usedWords.size == MAX_NO_OF_WORDS) {
+            val isGameOver = true
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isGuessedWordWrong = false,
+                    isGameOver = true
+                )
+            }
+        }else{
+            _uiState.update { currentState ->
+                currentState.copy(
+                    isGuessedWordWrong = false,
+                    currentScrambleWord = pickRandomWordAndShuffle(),
+                    score = updateScore,
+                    currentWordCount = currentState.currentWordCount.inc()
+                )
+            }
+        }
+        Log.i("currentWord","{$usedWords")
+    }
+    fun skipWord() {
         _uiState.update { currentState ->
             currentState.copy(
-                isGuessedWordWrong = false,
                 currentScrambleWord = pickRandomWordAndShuffle(),
-                score = updateScore,
-                currentWordCount = currentState.currentWordCount.inc()
             )
         }
     }

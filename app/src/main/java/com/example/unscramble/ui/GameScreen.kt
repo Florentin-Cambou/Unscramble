@@ -85,7 +85,8 @@ fun GameScreen(
             onUserGuessChanged = { gameViewModel.updateUserGuess(it) },
             onKeyboardDone = { gameViewModel.checkUserGuess() },
             userGuess = gameViewModel.userGuess,
-            isGuessedWordWrong = gameUiState.isGuessedWordWrong
+            isGuessedWordWrong = gameUiState.isGuessedWordWrong,
+            wordCount = gameUiState.currentWordCount
         )
         Column(
             modifier = Modifier
@@ -106,7 +107,7 @@ fun GameScreen(
             }
 
             OutlinedButton(
-                onClick = { },
+                onClick = { gameViewModel.skipWord()},
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
@@ -115,13 +116,15 @@ fun GameScreen(
                 )
             }
         }
-        // A modifier pour le rendre dynamique
-        GameStatus(wordCount = gameUiState.currentWordCount,score = gameUiState.score, modifier = Modifier.padding(20.dp))
+        GameStatus(score = gameUiState.score, modifier = Modifier.padding(20.dp))
+    }
+    if(gameUiState.isGameOver){
+        FinalScoreDialog(score = gameUiState.score, onPlayAgain = { gameViewModel.resetGame() })
     }
 }
 
 @Composable
-fun GameStatus(wordCount: Int,score: Int, modifier: Modifier = Modifier) {
+fun GameStatus(score: Int, modifier: Modifier = Modifier) {
     Card(
         modifier = modifier
     ) {
@@ -140,7 +143,8 @@ fun GameLayout(
     onUserGuessChanged: (String) -> Unit,
     onKeyboardDone: () -> Unit,
     userGuess: String,
-    isGuessedWordWrong: Boolean
+    isGuessedWordWrong: Boolean,
+    wordCount: Int
 ) {
     val mediumPadding = dimensionResource(R.dimen.padding_medium)
 
